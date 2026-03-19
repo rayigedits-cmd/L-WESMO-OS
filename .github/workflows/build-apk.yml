@@ -29,7 +29,7 @@ jobs:
       run: npm install --legacy-peer-deps
 
     - name: 🛠️ Patch & Install Plugins
-      # تم تعديل السطر ليتوافق مع متطلبات Expo CLI في بيئة GitHub
+      # تم تصحيح الصيغة بإضافة -- كما طلبت الصورة 1000066332
       run: npx expo install expo-build-properties -- --non-interactive
 
     - name: ⚙️ Expo Prebuild
@@ -39,7 +39,7 @@ jobs:
       run: chmod +x android/gradlew
 
     - name: 🏗️ Fix Android Repositories
-      # هذا السطر يحل مشكلة الروابط المكسورة في Gradle
+      # هذا الجزء يضمن حل مشكلة الصورة 1000066341 بجعل المستودعات عالمية
       run: |
         sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" android/build.gradle
 
@@ -54,6 +54,6 @@ jobs:
     - name: 📤 Upload L'WESMOU OS APK
       uses: actions/upload-artifact@v4
       with:
-        name: LWESMOU-OS-Build
+        name: LWESMOU-OS-Final-Build
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
