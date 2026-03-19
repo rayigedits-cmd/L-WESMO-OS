@@ -28,20 +28,26 @@ jobs:
     - name: 📦 Install Project Dependencies
       run: npm install --legacy-peer-deps
 
-    - name: 🛠️ Patch Expo Plugins
-      # تم حل مشكلة الصيغة التي ظهرت في الصورة 1000066332
+    - name: 🛠️ Install Expo Build Properties
+      # حل مشكلة الصيغة المطلوبة في سجلات GitHub (الصورة 1000066332)
       run: npx expo install expo-build-properties -- --non-interactive
 
     - name: ⚙️ Expo Prebuild
       run: npx expo prebuild --platform android --clean
 
-    - name: 🏗️ Fix Android Repositories (The Final Fix)
-      # هذا الأمر يحل مشكلة الصورة 1000066341 بإضافة JitPack يدوياً لكل ملفات Gradle
+    - name: 🏗️ Fix Android Repositories (The Core Fix)
+      # هذا الأمر يبحث في كل ملفات build.gradle المولدة ويحقن JitPack و MavenCentral
+      # ليتمكن Gradle من إيجاد org.asyncstorage المفقودة (الصورة 1000066346)
       run: |
         find android -name "build.gradle" -exec sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" {} +
 
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
+
+    - name: 🧹 Clean Gradle Cache
+      run: |
+        cd android
+        ./gradlew clean
 
     - name: 🏗️ Build Android APK (Release)
       run: |
@@ -54,7 +60,6 @@ jobs:
     - name: 📤 Upload L'WESMOU OS APK
       uses: actions/upload-artifact@v4
       with:
-        name: LWESMOU-OS-Build
+        name: LWESMOU-OS-Beta
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
-        
