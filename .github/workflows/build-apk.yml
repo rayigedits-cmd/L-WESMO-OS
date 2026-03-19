@@ -38,17 +38,26 @@ jobs:
     - name: Install dependencies
       run: npm install --legacy-peer-deps
     
-    - name: Prebuild Expo app
-      run: npx expo prebuild --clean # إضافة --clean لضمان توليد ملفات أندرويد جديدة تماماً
+    - name: Clean and Prebuild Expo
+      run: npx expo prebuild --clean --platform android
     
+    - name: Fix Resource Collisions and Namespace
+      run: |
+        # حل مشكلة تصادم الملفات المكررة (الصورة 21)
+        find android/app/src/main/res -name "com_facebook*" -delete
+        
+        # حل مشكلة تعارض الـ Namespace في Reanimated (الصورة 20)
+        find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
+
     - name: Set Execute Permission for Gradlew
       run: chmod +x android/gradlew
     
     - name: Build APK with Gradle
       run: |
         cd android
-        ./gradlew clean # تنظيف أي مخلفات بناء سابقة قد تسبب تعارضاً
-        ./gradlew assembleRelease --stacktrace --no-daemon # إيقاف الـ daemon لضمان عدم استهلاك الذاكرة وفشل البناء
+        ./gradlew clean
+        # استخدام سياسة تسمية مستقرة لتجاوز أي تعارضات متبقية في الموارد
+        ./gradlew assembleRelease --stacktrace --no-daemon -Pandroid.packageNamingPolicy=stable
         cd ..
     
     - name: Sign APK
@@ -68,7 +77,7 @@ jobs:
         name: l-wesmo-os-apk
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
-    
+
     - name: Create Release
       id: create_release
       if: startsWith(github.ref, 'refs/tags/')
@@ -80,7 +89,7 @@ jobs:
         release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
-    
+
     - name: Upload Release Asset
       if: startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-release-asset@v1
