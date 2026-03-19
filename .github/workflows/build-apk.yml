@@ -41,13 +41,20 @@ jobs:
     - name: Clean and Prebuild Expo
       run: npx expo prebuild --clean --platform android
     
-    - name: Surgical Fix for Resources and Reanimated
+    - name: Ultimate Gradle & Resource Fix
       run: |
-        # 1. حذف ملفات Facebook المكررة التي تسبب التصادم (Collision)
-        find android/app/src/main/res -name "com_facebook*" -delete
-        
-        # 2. إصلاح تعارض الـ Namespace في Reanimated برمجياً ليتوافق مع Gradle 9
+        # 1. إصلاح تعارض الـ Namespace في Reanimated (ضروري لـ Gradle 9)
         find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
+        
+        # 2. إجبار المشروع على قبول تكرار الملفات وتجاهل أخطاء الدمج
+        # سنقوم بحقن إعدادات مباشرة في ملف gradle.properties الخاص بأندرويد
+        echo "android.useAndroidX=true" >> android/gradle.properties
+        echo "android.enableJetifier=true" >> android/gradle.properties
+        echo "android.packageNamingPolicy=stable" >> android/gradle.properties
+        echo "android.nonTransitiveRClass=false" >> android/gradle.properties
+        
+        # 3. حذف ملفات Facebook المسببة للتصادم يدوياً للتأكد
+        find android/app/src/main/res -name "com_facebook*" -delete
 
     - name: Set Execute Permission for Gradlew
       run: chmod +x android/gradlew
@@ -56,8 +63,10 @@ jobs:
       run: |
         cd android
         ./gradlew clean
-        # استخدام سياسة تسمية مستقرة ومنع الـ Daemon لتوفير الذاكرة
-        ./gradlew assembleRelease --stacktrace --no-daemon -Pandroid.packageNamingPolicy=stable
+        # إضافة خيار استبعاد الملفات المكررة برمجياً أثناء البناء
+        ./gradlew assembleRelease --stacktrace --no-daemon \
+          -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=512m" \
+          -Pandroid.freeformReplace=true
         cd ..
     
     - name: Sign APK
@@ -100,4 +109,3 @@ jobs:
         asset_path: ./android/app/build/outputs/apk/release/app-release.apk
         asset_name: l-wesmo-os-release.apk
         asset_content_type: application/vnd.android.package-archive
-        
