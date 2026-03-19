@@ -25,22 +25,20 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 📦 Install Project Dependencies
-      # نستخدم --force لضمان تثبيت كافة المكتبات حتى لو وجد تعارض بسيط في النسخ
-      run: npm install --legacy-peer-deps --force
+    - name: 📦 Install All Dependencies
+      # نستخدم CI=1 لتعريف البيئة بأنها أوتوماتيكية وتجنب أي مشاكل تفاعلية
+      run: |
+        npm install --legacy-peer-deps
+        # تثبيت المكتبة يدوياً وبشكل صريح لضمان وجودها قبل الـ Prebuild
+        npm install @react-native-async-storage/async-storage --save
 
     - name: ⚙️ Expo Prebuild
-      # الـ prebuild سيتكفل الآن بضبط الـ plugins المذكورة في app.json تلقائياً
-      run: npx expo prebuild --platform android --clean
+      # نقوم بتنفيذ الـ Prebuild مع تجاهل التحقق من النسخ (Skip dependency check) 
+      # لأننا قمنا بتثبيتها يدوياً في الخطوة السابقة
+      run: npx expo prebuild --platform android --clean --no-install
 
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
-
-    - name: 🧹 Clean Gradle
-      run: |
-        cd android
-        ./gradlew clean
-        cd ..
 
     - name: 🏗️ Build Android APK (Release)
       run: |
