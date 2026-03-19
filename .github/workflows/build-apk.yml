@@ -26,14 +26,11 @@ jobs:
         java-version: '17'
 
     - name: 📦 Install Project Dependencies
-      run: npm install --legacy-peer-deps
-
-    - name: 🛠️ Patch & Install Plugins
-      run: |
-        CI=1 npx expo install expo-build-properties --non-interactive
-        CI=1 npx expo install @react-native-async-storage/async-storage --non-interactive
+      # نستخدم --force لضمان تثبيت كافة المكتبات حتى لو وجد تعارض بسيط في النسخ
+      run: npm install --legacy-peer-deps --force
 
     - name: ⚙️ Expo Prebuild
+      # الـ prebuild سيتكفل الآن بضبط الـ plugins المذكورة في app.json تلقائياً
       run: npx expo prebuild --platform android --clean
 
     - name: 🔐 Set Execute Permission
