@@ -25,8 +25,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 📦 Install dependencies
-      run: npm install --legacy-peer-deps
+    - name: 📦 Install & Patch Plugins
+      run: |
+        npm install --legacy-peer-deps
+        # الحل الجذري لخطأ السطر 7 في صورتك: تثبيت الملحق قسرياً قبل الـ Prebuild
+        npx expo install expo-build-properties --non-interactive
 
     - name: 🛠️ Expo Prebuild
       run: npx expo prebuild --platform android --clean
@@ -34,13 +37,11 @@ jobs:
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
 
-    - name: 🏗️ Build Android APK
+    - name: 🏗️ Build Android APK (Gradle 9 Fix)
       run: |
         cd android
-        # تنظيف أي بقايا سابقة داخل السيرفر
         ./gradlew clean
-        # الأمر السحري: إجبار Gradle على المتابعة رغم وجود ملفات مكررة (Images Collision)
-        # وتجاهل التحذيرات غير الحرجة لضمان استخراج الـ APK
+        # استخدام البرامترات التي تمنع الانهيار بسبب تصادم الصور (Facebook/SSL)
         ./gradlew assembleRelease --no-daemon \
           -Pandroid.mergeResources.failOnErrors=false \
           -Pandroid.packageNamingPolicy=stable \
@@ -48,7 +49,6 @@ jobs:
         cd ..
 
     - name: ✍️ Sign APK
-      id: sign_app
       uses: r0adkll/sign-android-release@v1
       with:
         releaseDirectory: android/app/build/outputs/apk/release
@@ -57,10 +57,9 @@ jobs:
         keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
 
-    - name: 📤 Upload Final APK
+    - name: 📤 Upload L'WESMOU OS APK
       uses: actions/upload-artifact@v4
       with:
-        name: LWESMOU-OS-Premium-Build
+        name: LWESMOU-OS-Build-Success
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
-        
