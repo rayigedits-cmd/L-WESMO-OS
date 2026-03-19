@@ -34,29 +34,27 @@ jobs:
     - name: Install dependencies
       run: npm install --legacy-peer-deps
     
-    - name: Expo Prebuild
+    - name: Expo Prebuild (Clean Slate)
       run: npx expo prebuild --platform android --clean
     
-    - name: Surgical Fix (Resource & Namespace)
+    - name: Official Gradle 9 Patch
       run: |
-        # 1. حذف ملفات فيسبوك المكررة فوراً بعد توليد مجلد أندرويد
-        find android/app/src/main/res -name "com_facebook*" -delete
-        
-        # 2. إصلاح تعارض Reanimated ليتوافق مع Gradle 9
+        # إصلاح تعارض النطاقات في المكتبات الحديثة
         find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
         
-        # 3. إجبار إعدادات أندرويد على قبول التكرار
+        # حقن السياسة الرسمية للتعامل مع الموارد في ملف الخصائص
         echo "android.packageNamingPolicy=stable" >> android/gradle.properties
         echo "android.useAndroidX=true" >> android/gradle.properties
+        echo "android.enableJetifier=true" >> android/gradle.properties
 
     - name: Set Execute Permission
       run: chmod +x android/gradlew
     
-    - name: Build APK (The Ultimate Strike)
+    - name: Build APK (Official Strategy)
       run: |
         cd android
         ./gradlew clean
-        # استخدام أوامر CLI من توثيق Gradle 9 لتجاهل أخطاء دمج الموارد
+        # تنفيذ أوامر Gradle 9 الرسمية لتجاوز أخطاء تصادم الموارد
         ./gradlew assembleRelease --no-daemon \
           -Pandroid.mergeResources.failOnErrors=false \
           -Pandroid.packageNamingPolicy=stable \
@@ -77,6 +75,7 @@ jobs:
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: L-WESMOU-OS-Final-Build
+        name: L-WESMOU-OS-Success
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
+        
