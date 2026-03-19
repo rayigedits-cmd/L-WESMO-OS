@@ -14,11 +14,6 @@
     "assetBundlePatterns": [
       "**/*"
     ],
-    "ios": {
-      "supportsTabletMode": true,
-      "bundleIdentifier": "com.mellouki.lwesmo",
-      "deploymentTarget": "14.0"
-    },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -30,9 +25,7 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_EXTERNAL_STORAGE",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
-        "android.permission.INTERNET",
-        "android.permission.ACCESS_CLIPBOARD"
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "plugins": [
@@ -48,8 +41,8 @@
           "android": {
             "packagingOptions": {
               "pickFirst": [
-                "**/com_facebook_*",
-                "**/libc++_shared.so"
+                "**/libc++_shared.so",
+                "**/libcrypto.so"
               ]
             }
           }
