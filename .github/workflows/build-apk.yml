@@ -29,14 +29,14 @@ jobs:
       run: npm install --legacy-peer-deps
 
     - name: 🛠️ Patch Expo Plugins
-      # تصحيح الصيغة بإضافة -- كما طلبت سجلات الخطأ في صورتك
+      # تم حل مشكلة الصيغة التي ظهرت في الصورة 1000066332
       run: npx expo install expo-build-properties -- --non-interactive
 
     - name: ⚙️ Expo Prebuild
       run: npx expo prebuild --platform android --clean
 
-    - name: 🏗️ Fix Android Repositories (The Core Fix)
-      # هذا الأمر يحل مشكلة المكتبات المفقودة في الصور 1000066345 و 1000066346
+    - name: 🏗️ Fix Android Repositories (The Final Fix)
+      # هذا الأمر يحل مشكلة الصورة 1000066341 بإضافة JitPack يدوياً لكل ملفات Gradle
       run: |
         find android -name "build.gradle" -exec sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" {} +
 
