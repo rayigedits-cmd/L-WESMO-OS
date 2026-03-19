@@ -71,7 +71,8 @@
               "pickFirst": [
                 "**/com_facebook_*",
                 "**/libc++_shared.so",
-                "**/libcrypto.so"
+                "**/libcrypto.so",
+                "**/libssl.so"
               ]
             }
           }
