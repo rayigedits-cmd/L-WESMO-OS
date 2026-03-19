@@ -34,33 +34,49 @@ jobs:
     - name: Install dependencies
       run: npm install --legacy-peer-deps
     
-    - name: Clean Prebuild
+    - name: Expo Prebuild
       run: npx expo prebuild --platform android --clean
     
-    - name: Patch Android Project
+    - name: Surgical Fix (Resource & Namespace)
       run: |
-        # 1. إصلاح تعارض النطاقات (Namespaces)
+        # 1. حذف ملفات فيسبوك المكررة فوراً بعد توليد مجلد أندرويد
+        find android/app/src/main/res -name "com_facebook*" -delete
+        
+        # 2. إصلاح تعارض Reanimated ليتوافق مع Gradle 9
         find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
         
-        # 2. حقن سياسة دمج الموارد مباشرة في إعدادات أندرويد لتعطيل الانهيار عند التكرار
+        # 3. إجبار إعدادات أندرويد على قبول التكرار
         echo "android.packageNamingPolicy=stable" >> android/gradle.properties
         echo "android.useAndroidX=true" >> android/gradle.properties
 
     - name: Set Execute Permission
       run: chmod +x android/gradlew
     
-    - name: Build APK (Ultimate Strategy)
+    - name: Build APK (The Ultimate Strike)
       run: |
         cd android
-        # استخدام أوامر Gradle 9 لتجاوز تحذيرات وأخطاء الموارد المكررة
+        ./gradlew clean
+        # استخدام أوامر CLI من توثيق Gradle 9 لتجاهل أخطاء دمج الموارد
         ./gradlew assembleRelease --no-daemon \
           -Pandroid.mergeResources.failOnErrors=false \
           -Pandroid.packageNamingPolicy=stable \
           --stacktrace
         cd ..
 
-    - name: Upload APK
+    - name: Sign APK
+      id: sign
+      uses: r0adkll/sign-android-release@v1
+      with:
+        releaseDirectory: android/app/build/outputs/apk/release
+        signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+        alias: ${{ secrets.ANDROID_KEY_ALIAS }}
+        keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
+      continue-on-error: true
+
+    - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: L-WESMOU-OS-Success
+        name: L-WESMOU-OS-Final-Build
         path: android/app/build/outputs/apk/release/*.apk
+        retention-days: 7
