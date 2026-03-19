@@ -1,0 +1,76 @@
+{
+  "expo": {
+    "name": "L'WESMOU OS",
+    "slug": "l-wesmo-os",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0E27"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.mellouki.lwesmo",
+      "deploymentTarget": "14.0"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0E27"
+      },
+      "package": "com.mellouki.lwesmo",
+      "minSdkVersion": 24,
+      "versionCode": 1,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.INTERNET",
+        "android.permission.ACCESS_CLIPBOARD"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            {
+              "scheme": "http"
+            },
+            {
+              "scheme": "https"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"],
+          "autoVerify": true
+        },
+        {
+          "action": "SEND",
+          "category": ["DEFAULT"],
+          "data": [
+            {
+              "mimeType": "text/plain"
+            }
+          ]
+        }
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Camera permission is required to use the scanner."
+        }
+      ]
+    ],
+    "description": "L'WESMOU OS - Privacy-First Ultra-Premium Mobile Platform. Complete local processing. Zero cloud. Zero tracking. Professional tools with glassmorphic design.",
+    "backgroundColor": "#0A0E27"
+  }
+}
