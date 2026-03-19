@@ -28,20 +28,20 @@ jobs:
     - name: 📦 Install Project Dependencies
       run: npm install --legacy-peer-deps
 
-    - name: 🛠️ Patch & Install Plugins
-      # تم تصحيح الصيغة بإضافة -- كما طلبت الصورة 1000066332
+    - name: 🛠️ Patch Expo Plugins
+      # تصحيح الصيغة بإضافة -- كما طلبت سجلات الخطأ في صورتك
       run: npx expo install expo-build-properties -- --non-interactive
 
     - name: ⚙️ Expo Prebuild
       run: npx expo prebuild --platform android --clean
 
+    - name: 🏗️ Fix Android Repositories (The Core Fix)
+      # هذا الأمر يحل مشكلة المكتبات المفقودة في الصور 1000066345 و 1000066346
+      run: |
+        find android -name "build.gradle" -exec sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" {} +
+
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
-
-    - name: 🏗️ Fix Android Repositories
-      # هذا الجزء يضمن حل مشكلة الصورة 1000066341 بجعل المستودعات عالمية
-      run: |
-        sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" android/build.gradle
 
     - name: 🏗️ Build Android APK (Release)
       run: |
@@ -54,6 +54,7 @@ jobs:
     - name: 📤 Upload L'WESMOU OS APK
       uses: actions/upload-artifact@v4
       with:
-        name: LWESMOU-OS-Final-Build
+        name: LWESMOU-OS-Build
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
+        
