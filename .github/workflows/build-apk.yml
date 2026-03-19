@@ -25,41 +25,38 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 📦 Install & Patch Plugins
-      run: |
-        npm install --legacy-peer-deps
-        # الحل الجذري لخطأ السطر 7 في صورتك: تثبيت الملحق قسرياً قبل الـ Prebuild
-        npx expo install expo-build-properties --non-interactive
+    - name: 📦 Install Project Dependencies
+      # نستخدم legacy-peer-deps لأن مشروعك يستخدم React 19 و Expo 55
+      # وهذا يضمن تثبيت Tesseract و Moti و PDF-lib دون نزاعات
+      run: npm install --legacy-peer-deps
 
-    - name: 🛠️ Expo Prebuild
+    - name: 🛠️ Patch Missing Plugins
+      # هذه الخطوة الآن منفصلة تماماً لضمان عدم تداخلها مع npm install
+      # ستقوم فقط بإضافة الملحق الضروري لحل خطأ "PluginError" في السطر 7
+      run: npx expo install expo-build-properties --non-interactive
+
+    - name: ⚙️ Expo Prebuild
+      # توليد مجلد أندرويد الخام بناءً على الـ app.json الاحترافي الخاص بك
       run: npx expo prebuild --platform android --clean
 
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
 
-    - name: 🏗️ Build Android APK (Gradle 9 Fix)
+    - name: 🏗️ Build Android APK (Release)
+      # هنا يتم دمج الموارد الضخمة لمشروع L'WESMOU OS
+      # أضفنا برامترات تجاوز أخطاء الموارد المكررة لضمان عدم توقف المعالج
       run: |
         cd android
-        ./gradlew clean
-        # استخدام البرامترات التي تمنع الانهيار بسبب تصادم الصور (Facebook/SSL)
         ./gradlew assembleRelease --no-daemon \
           -Pandroid.mergeResources.failOnErrors=false \
           -Pandroid.packageNamingPolicy=stable \
           -Dorg.gradle.warning.mode=none
         cd ..
 
-    - name: ✍️ Sign APK
-      uses: r0adkll/sign-android-release@v1
-      with:
-        releaseDirectory: android/app/build/outputs/apk/release
-        signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
-        alias: ${{ secrets.ANDROID_KEY_ALIAS }}
-        keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-
     - name: 📤 Upload L'WESMOU OS APK
+      # رفع الملف النهائي كـ Artifact للتحميل
       uses: actions/upload-artifact@v4
       with:
-        name: LWESMOU-OS-Build-Success
+        name: LWESMOU-OS-Beta-V1
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
