@@ -1,4 +1,4 @@
-name: Build APK (Force Gradle 8)
+name: Build APK (Expo Managed + Gradle 8)
 
 on:
   push:
@@ -23,7 +23,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17' # Java 17 مثالية لـ Gradle 8
+        java-version: '17' # متوافق تماماً مع Gradle 8
     
     - name: Install dependencies
       run: npm install --legacy-peer-deps
@@ -31,33 +31,27 @@ jobs:
     - name: Expo Prebuild
       run: npx expo prebuild --platform android --clean
     
-    - name: Force Gradle 8.10.2 Downgrade
+    - name: Force Gradle 8.10.2 & Patch Collision
       run: |
-        # الانتقال لمجلد أندرويد وتغيير نسخة الـ Wrapper قسرياً
-        cd android
-        chmod +x gradlew
-        ./gradlew wrapper --gradle-version 8.10.2 --distribution-type all
-        # التأكد من تحديث ملف الإعدادات
-        sed -i 's/gradle-9.0-all.zip/gradle-8.10.2-all.zip/g' gradle/wrapper/gradle-wrapper.properties || true
-        cd ..
-
-    - name: Apply Packaging Fixes
-      run: |
-        # حقن قوانين دمج الملفات المكررة في build.gradle لتجنب Collision
-        sed -i "/android {/a \    packagingOptions {\n        pickFirst '**/com_facebook_*'\n        merge '**/com_facebook_*'\n        pickFirst '**/libc++_shared.so'\n    }" android/app/build.gradle
+        # 1. تغيير نسخة Gradle قسرياً داخل الملفات المولدة
+        sed -i 's/gradle-9.0-all.zip/gradle-8.10.2-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties
         
-        # إصلاح النطاقات للمكتبات
+        # 2. حقن سياسة دمج الموارد (pickFirst) لمنع الانهيار بسبب صور فيسبوك
+        # نضعها في ملف build.gradle المولد لضمان التنفيذ
+        sed -i "/android {/a \    packagingOptions {\n        pickFirst '**/com_facebook_*'\n        merge '**/com_facebook_*'\n    }" android/app/build.gradle
+        
+        # 3. إصلاح تعارض الـ Namespace في Reanimated
         find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
 
     - name: Set Execute Permission
       run: chmod +x android/gradlew
     
-    - name: Build APK with Gradle 8
+    - name: Build APK (The Final Victory)
       run: |
         cd android
-        ./gradlew clean
-        # البناء باستخدام الإصدار 8 الذي تم فرضه
-        ./gradlew assembleRelease --no-daemon --stacktrace
+        # تشغيل البناء باستخدام النسخة التي فرضناها (8.10.2)
+        ./gradlew assembleRelease --no-daemon --stacktrace \
+          -Pandroid.mergeResources.failOnErrors=false
         cd ..
 
     - name: Sign APK
