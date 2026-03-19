@@ -28,9 +28,10 @@ jobs:
     - name: 📦 Install Project Dependencies
       run: npm install --legacy-peer-deps
 
-    - name: 🛠️ Patch Missing Plugins
-      # تم تصحيح هذا السطر بناءً على الخطأ في السيرفر لاستخدام CI=1
-      run: CI=1 npx expo install expo-build-properties
+    - name: 🛠️ Patch & Install Plugins
+      run: |
+        CI=1 npx expo install expo-build-properties --non-interactive
+        CI=1 npx expo install @react-native-async-storage/async-storage --non-interactive
 
     - name: ⚙️ Expo Prebuild
       run: npx expo prebuild --platform android --clean
@@ -38,12 +39,19 @@ jobs:
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
 
+    - name: 🧹 Clean Gradle
+      run: |
+        cd android
+        ./gradlew clean
+        cd ..
+
     - name: 🏗️ Build Android APK (Release)
       run: |
         cd android
         ./gradlew assembleRelease --no-daemon \
           -Pandroid.mergeResources.failOnErrors=false \
-          -Dorg.gradle.warning.mode=none
+          -Dorg.gradle.warning.mode=none \
+          --stacktrace
         cd ..
 
     - name: 📤 Upload L'WESMOU OS APK
