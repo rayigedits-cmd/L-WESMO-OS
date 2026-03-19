@@ -1,4 +1,4 @@
-name: Build APK
+name: Build APK (Stable Gradle 8)
 
 on:
   push:
@@ -25,40 +25,36 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
     
-    - name: Setup Android SDK
-      uses: android-actions/setup-android@v3
-      with:
-        api-levels: '34'
-        build-tools: '34.0.0'
-    
     - name: Install dependencies
       run: npm install --legacy-peer-deps
     
-    - name: Expo Prebuild (Clean Slate)
+    - name: Expo Prebuild
       run: npx expo prebuild --platform android --clean
     
-    - name: Official Gradle 9 Patch
+    - name: Force Gradle Downgrade to 8.10.2
       run: |
-        # إصلاح تعارض النطاقات في المكتبات الحديثة
-        find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
+        # تغيير نسخة Gradle في ملف الـ wrapper لضمان عدم استخدام الإصدار 9
+        cd android
+        ./gradlew wrapper --gradle-version 8.10.2 --distribution-type all
+        cd ..
         
-        # حقن السياسة الرسمية للتعامل مع الموارد في ملف الخصائص
-        echo "android.packageNamingPolicy=stable" >> android/gradle.properties
+    - name: Patch for Stability
+      run: |
+        # إضافة إعدادات التوافق في ملف الخصائص
         echo "android.useAndroidX=true" >> android/gradle.properties
         echo "android.enableJetifier=true" >> android/gradle.properties
+        # استراتيجية التعامل مع الموارد المكررة (كأمان إضافي)
+        sed -i "/android {/a \    packagingOptions {\n        pickFirst '**/com_facebook_*'\n        merge '**/com_facebook_*'\n    }" android/app/build.gradle
 
     - name: Set Execute Permission
       run: chmod +x android/gradlew
     
-    - name: Build APK (Official Strategy)
+    - name: Build APK with Gradle 8
       run: |
         cd android
         ./gradlew clean
-        # تنفيذ أوامر Gradle 9 الرسمية لتجاوز أخطاء تصادم الموارد
-        ./gradlew assembleRelease --no-daemon \
-          -Pandroid.mergeResources.failOnErrors=false \
-          -Pandroid.packageNamingPolicy=stable \
-          --stacktrace
+        # البناء باستخدام Gradle 8 الذي يتغاضى عن مشاكل التصادم البسيطة
+        ./gradlew assembleRelease --no-daemon --stacktrace
         cd ..
 
     - name: Sign APK
@@ -75,7 +71,7 @@ jobs:
     - name: Upload APK Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: L-WESMOU-OS-Success
+        name: L-WESMOU-OS-v8-Success
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
         
