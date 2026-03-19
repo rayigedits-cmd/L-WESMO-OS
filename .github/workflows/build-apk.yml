@@ -39,7 +39,7 @@ jobs:
       run: npm install --legacy-peer-deps
     
     - name: Prebuild Expo app
-      run: npx expo prebuild
+      run: npx expo prebuild --clean # إضافة --clean لضمان توليد ملفات أندرويد جديدة تماماً
     
     - name: Set Execute Permission for Gradlew
       run: chmod +x android/gradlew
@@ -47,7 +47,8 @@ jobs:
     - name: Build APK with Gradle
       run: |
         cd android
-        ./gradlew assembleRelease --stacktrace
+        ./gradlew clean # تنظيف أي مخلفات بناء سابقة قد تسبب تعارضاً
+        ./gradlew assembleRelease --stacktrace --no-daemon # إيقاف الـ daemon لضمان عدم استهلاك الذاكرة وفشل البناء
         cd ..
     
     - name: Sign APK
