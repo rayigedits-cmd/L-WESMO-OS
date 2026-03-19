@@ -19,7 +19,7 @@ jobs:
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
+        node-version: '20'
         cache: 'npm'
     
     - name: Setup Java
@@ -36,15 +36,18 @@ jobs:
         ndk-version: '26.0.10792818'
     
     - name: Install dependencies
-      run: npm install
+      run: npm install --legacy-peer-deps
     
     - name: Prebuild Expo app
-      run: npm run prebuild
+      run: npx expo prebuild
+    
+    - name: Set Execute Permission for Gradlew
+      run: chmod +x android/gradlew
     
     - name: Build APK with Gradle
       run: |
         cd android
-        ./gradlew assembleRelease
+        ./gradlew assembleRelease --stacktrace
         cd ..
     
     - name: Sign APK
