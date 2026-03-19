@@ -25,21 +25,21 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 📦 Install Dependencies
-      run: |
-        npm install --legacy-peer-deps
-        # نكتفي بالتثبيت العادي لضمان التوافق مع Autolinking
-        npm install @react-native-async-storage/async-storage
+    - name: 📦 Install Project Dependencies
+      run: npm install --legacy-peer-deps
+
+    - name: 🛠️ Patch & Install Plugins
+      # تم تعديل السطر ليتوافق مع متطلبات Expo CLI في بيئة GitHub
+      run: npx expo install expo-build-properties -- --non-interactive
 
     - name: ⚙️ Expo Prebuild
-      # إزالة --no-install للسماح لـ Expo بتوليد ملفات الأندرويد الأصلية بشكل صحيح
       run: npx expo prebuild --platform android --clean
 
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
 
-    - name: 🛠️ Fix Gradle Repositories
-      # هذه الخطوة تعالج فشل تحميل POM الذي ظهر في صورتك الثانية
+    - name: 🏗️ Fix Android Repositories
+      # هذا السطر يحل مشكلة الروابط المكسورة في Gradle
       run: |
         sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" android/build.gradle
 
@@ -54,6 +54,6 @@ jobs:
     - name: 📤 Upload L'WESMOU OS APK
       uses: actions/upload-artifact@v4
       with:
-        name: LWESMOU-OS-Beta-V1
+        name: LWESMOU-OS-Build
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
