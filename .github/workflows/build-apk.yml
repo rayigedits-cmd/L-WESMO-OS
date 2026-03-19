@@ -25,20 +25,26 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 📦 Install All Dependencies
-      # نستخدم CI=1 لتعريف البيئة بأنها أوتوماتيكية وتجنب أي مشاكل تفاعلية
+    - name: 📦 Clean & Install Dependencies
       run: |
+        # تنظيف شامل للمجلدات لضمان عدم وجود ملفات تالفة من المحاولات السابقة
+        rm -rf node_modules package-lock.json
         npm install --legacy-peer-deps
-        # تثبيت المكتبة يدوياً وبشكل صريح لضمان وجودها قبل الـ Prebuild
+        # تثبيت المكتبة المسؤولة عن الخطأ بشكل صريح ومباشر
         npm install @react-native-async-storage/async-storage --save
 
     - name: ⚙️ Expo Prebuild
-      # نقوم بتنفيذ الـ Prebuild مع تجاهل التحقق من النسخ (Skip dependency check) 
-      # لأننا قمنا بتثبيتها يدوياً في الخطوة السابقة
+      # نستخدم --no-install لمنع Expo من محاولة إعادة التثبيت وتخريب المسارات
       run: npx expo prebuild --platform android --clean --no-install
 
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
+
+    - name: 🧹 Gradle Clean
+      run: |
+        cd android
+        ./gradlew clean
+        cd ..
 
     - name: 🏗️ Build Android APK (Release)
       run: |
@@ -55,3 +61,4 @@ jobs:
         name: LWESMOU-OS-Beta-V1
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
+        
