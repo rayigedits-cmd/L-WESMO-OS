@@ -29,14 +29,15 @@ jobs:
       run: npm install --legacy-peer-deps
 
     - name: 🛠️ Patch Expo Plugins
-      # تصحيح صيغة الأمر الصامت لتجنب خطأ الصورة 1000066332
+      # تم تصحيح الصيغة لتكون صامتة تماماً وتتجنب خطأ الصورة 1000066332
       run: npx expo install expo-build-properties -- --non-interactive
 
     - name: ⚙️ Expo Prebuild
       run: npx expo prebuild --platform android --clean
 
-    - name: 🏗️ Inject JitPack Repository (The Core Fix)
-      # هذا الأمر يحل مشكلة "Could not find org.asyncstorage" في الصور 1000066341 و 1000066346
+    - name: 🏗️ Fix Android Repositories (The Final Fix)
+      # هذا الأمر يبحث في ملفات build.gradle المولدة ويحقن JitPack
+      # ليتمكن Gradle من إيجاد المكتبات المفقودة في الصورة 1000066346
       run: |
         find android -name "build.gradle" -exec sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" {} +
 
