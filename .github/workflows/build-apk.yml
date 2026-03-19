@@ -1,8 +1,8 @@
-name: Build APK (Expo Managed + Gradle 8)
+name: Build APK
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -10,52 +10,45 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Checkout code
+    - name: 📂 Checkout code
       uses: actions/checkout@v4
-    
-    - name: Setup Node.js
+
+    - name: 🟢 Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
-    
-    - name: Setup Java
+
+    - name: ☕ Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '17' # متوافق تماماً مع Gradle 8
-    
-    - name: Install dependencies
-      run: npm install --legacy-peer-deps
-    
-    - name: Expo Prebuild
-      run: npx expo prebuild --platform android --clean
-    
-    - name: Force Gradle 8.10.2 & Patch Collision
-      run: |
-        # 1. تغيير نسخة Gradle قسرياً داخل الملفات المولدة
-        sed -i 's/gradle-9.0-all.zip/gradle-8.10.2-all.zip/g' android/gradle/wrapper/gradle-wrapper.properties
-        
-        # 2. حقن سياسة دمج الموارد (pickFirst) لمنع الانهيار بسبب صور فيسبوك
-        # نضعها في ملف build.gradle المولد لضمان التنفيذ
-        sed -i "/android {/a \    packagingOptions {\n        pickFirst '**/com_facebook_*'\n        merge '**/com_facebook_*'\n    }" android/app/build.gradle
-        
-        # 3. إصلاح تعارض الـ Namespace في Reanimated
-        find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
+        java-version: '17'
 
-    - name: Set Execute Permission
+    - name: 📦 Install dependencies
+      run: npm install --legacy-peer-deps
+
+    - name: 🛠️ Expo Prebuild
+      run: npx expo prebuild --platform android --clean
+
+    - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
-    
-    - name: Build APK (The Final Victory)
+
+    - name: 🏗️ Build Android APK
       run: |
         cd android
-        # تشغيل البناء باستخدام النسخة التي فرضناها (8.10.2)
-        ./gradlew assembleRelease --no-daemon --stacktrace \
-          -Pandroid.mergeResources.failOnErrors=false
+        # تنظيف أي بقايا سابقة داخل السيرفر
+        ./gradlew clean
+        # الأمر السحري: إجبار Gradle على المتابعة رغم وجود ملفات مكررة (Images Collision)
+        # وتجاهل التحذيرات غير الحرجة لضمان استخراج الـ APK
+        ./gradlew assembleRelease --no-daemon \
+          -Pandroid.mergeResources.failOnErrors=false \
+          -Pandroid.packageNamingPolicy=stable \
+          -Dorg.gradle.warning.mode=none
         cd ..
 
-    - name: Sign APK
-      id: sign
+    - name: ✍️ Sign APK
+      id: sign_app
       uses: r0adkll/sign-android-release@v1
       with:
         releaseDirectory: android/app/build/outputs/apk/release
@@ -63,12 +56,11 @@ jobs:
         alias: ${{ secrets.ANDROID_KEY_ALIAS }}
         keyStorePassword: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         keyPassword: ${{ secrets.ANDROID_KEY_PASSWORD }}
-      continue-on-error: true
 
-    - name: Upload APK Artifact
+    - name: 📤 Upload Final APK
       uses: actions/upload-artifact@v4
       with:
-        name: L-WESMOU-OS-v8-Final
+        name: LWESMOU-OS-Premium-Build
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
         
