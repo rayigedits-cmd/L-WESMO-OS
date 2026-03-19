@@ -10,22 +10,32 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ جلب الكود
       - name: 📂 Checkout code
         uses: actions/checkout@v4
 
+      # 2️⃣ إعداد Node.js
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
+      # 3️⃣ تثبيت dependencies
       - name: 📦 Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: 🔧 Install Expo CLI
+      # 4️⃣ تثبيت Expo CLI و EAS CLI
+      - name: 🔧 Install Expo & EAS
         run: npm install -g expo-cli eas-cli
 
+      # 5️⃣ تسجيل الدخول في Expo باستخدام Secrets
       - name: 🔑 Login to Expo
         run: npx expo login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
 
-      - name: 🏗️ Build APK with EAS
+      # 6️⃣ تكوين مشروع EAS (ينشئ android/ios تلقائيًا إذا لم تكن موجودة)
+      - name: ⚙️ Configure EAS
+        run: npx eas build:configure
+
+      # 7️⃣ بناء APK
+      - name: 🏗️ Build APK
         run: npx eas build -p android --non-interactive --profile preview
