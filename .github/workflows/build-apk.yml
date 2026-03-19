@@ -25,34 +25,30 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
 
-    - name: 📦 Clean & Install Dependencies
+    - name: 📦 Install Dependencies
       run: |
-        # تنظيف شامل للمجلدات لضمان عدم وجود ملفات تالفة من المحاولات السابقة
-        rm -rf node_modules package-lock.json
         npm install --legacy-peer-deps
-        # تثبيت المكتبة المسؤولة عن الخطأ بشكل صريح ومباشر
-        npm install @react-native-async-storage/async-storage --save
+        # نكتفي بالتثبيت العادي لضمان التوافق مع Autolinking
+        npm install @react-native-async-storage/async-storage
 
     - name: ⚙️ Expo Prebuild
-      # نستخدم --no-install لمنع Expo من محاولة إعادة التثبيت وتخريب المسارات
-      run: npx expo prebuild --platform android --clean --no-install
+      # إزالة --no-install للسماح لـ Expo بتوليد ملفات الأندرويد الأصلية بشكل صحيح
+      run: npx expo prebuild --platform android --clean
 
     - name: 🔐 Set Execute Permission
       run: chmod +x android/gradlew
 
-    - name: 🧹 Gradle Clean
+    - name: 🛠️ Fix Gradle Repositories
+      # هذه الخطوة تعالج فشل تحميل POM الذي ظهر في صورتك الثانية
       run: |
-        cd android
-        ./gradlew clean
-        cd ..
+        sed -i "s/google()/google()\n        mavenCentral()\n        maven { url 'https:\/\/jitpack.io' }/g" android/build.gradle
 
     - name: 🏗️ Build Android APK (Release)
       run: |
         cd android
         ./gradlew assembleRelease --no-daemon \
           -Pandroid.mergeResources.failOnErrors=false \
-          -Dorg.gradle.warning.mode=none \
-          --stacktrace
+          -Dorg.gradle.warning.mode=none
         cd ..
 
     - name: 📤 Upload L'WESMOU OS APK
@@ -61,4 +57,3 @@ jobs:
         name: LWESMOU-OS-Beta-V1
         path: android/app/build/outputs/apk/release/*.apk
         retention-days: 7
-        
