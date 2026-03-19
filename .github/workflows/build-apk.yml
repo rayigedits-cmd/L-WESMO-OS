@@ -41,14 +41,13 @@ jobs:
     - name: Clean and Prebuild Expo
       run: npx expo prebuild --clean --platform android
     
-    - name: Fix Reanimated and Resource Collisions
+    - name: Surgical Fix for Resources and Reanimated
       run: |
-        # 1. حل مشكلة تعارض الـ Namespace في Reanimated برمجياً
-        find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
-        
-        # 2. حل مشكلة تصادم الملفات المكررة (Facebook Resources)
-        # نقوم بحذفها من مجلد الموارد قبل أن يبدأ Gradle في دمجها
+        # 1. حذف ملفات Facebook المكررة التي تسبب التصادم (Collision)
         find android/app/src/main/res -name "com_facebook*" -delete
+        
+        # 2. إصلاح تعارض الـ Namespace في Reanimated برمجياً ليتوافق مع Gradle 9
+        find node_modules/react-native-reanimated/android -name "*.gradle" -exec sed -i 's/namespace "com.swmansion.reanimated"/ /g' {} +
 
     - name: Set Execute Permission for Gradlew
       run: chmod +x android/gradlew
@@ -57,7 +56,7 @@ jobs:
       run: |
         cd android
         ./gradlew clean
-        # استخدام خيارات الاستقرار ومنع تكرار المهام
+        # استخدام سياسة تسمية مستقرة ومنع الـ Daemon لتوفير الذاكرة
         ./gradlew assembleRelease --stacktrace --no-daemon -Pandroid.packageNamingPolicy=stable
         cd ..
     
@@ -101,3 +100,4 @@ jobs:
         asset_path: ./android/app/build/outputs/apk/release/app-release.apk
         asset_name: l-wesmo-os-release.apk
         asset_content_type: application/vnd.android.package-archive
+        
