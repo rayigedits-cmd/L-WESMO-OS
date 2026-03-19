@@ -39,6 +39,7 @@
     "expo-haptics": "^55.0.9",
     "expo-sharing": "^55.0.14",
     "expo-status-bar": "^55.0.4",
+    "expo-build-properties": "^55.0.0",
     "moti": "^0.30.0",
     "pdf-lib": "^1.17.1",
     "react": "^19.2.4",
