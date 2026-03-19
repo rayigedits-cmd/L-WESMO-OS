@@ -33,7 +33,28 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.INTERNET",
         "android.permission.ACCESS_CLIPBOARD"
+      ],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "data": [
+            { "scheme": "http" },
+            { "scheme": "https" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"],
+          "autoVerify": true
+        },
+        {
+          "action": "SEND",
+          "category": ["DEFAULT"],
+          "data": [
+            { "mimeType": "text/plain" }
+          ]
+        }
       ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
       [
@@ -57,7 +78,7 @@
         }
       ]
     ],
-    "description": "L'WESMOU OS - Privacy-First Ultra-Premium Mobile Platform.",
+    "description": "L'WESMOU OS - Privacy-First Ultra-Premium Mobile Platform. Complete local processing. Zero cloud. Zero tracking. Professional tools with glassmorphic design.",
     "backgroundColor": "#0A0E27"
   }
 }
